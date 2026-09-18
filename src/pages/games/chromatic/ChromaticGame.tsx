@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { addToLeaderboard } from "@/lib/scoring";
 import type { LeaderboardEntry } from "@/lib/scoring";
 import { unlockAudioContext, playBlip } from "@/lib/audio-engine";
+import GameIntro from "@/components/GameIntro";
 
 type GamePhase = "intro" | "playback" | "input" | "gameover";
 
@@ -39,7 +40,28 @@ const PADS = [
     freq: 659,
     key: "4",
   },
+  {
+    id: 4,
+    color: "#b56cff",
+    icon: "★",
+    label: "Violet star pad",
+    freq: 784,
+    key: "5",
+  },
+  {
+    id: 5,
+    color: "#ff6b9d",
+    icon: "✚",
+    label: "Pink plus pad",
+    freq: 880,
+    key: "6",
+  },
 ];
+
+function randomPadId(sequenceLength: number): number {
+  const padCount = sequenceLength >= 4 ? PADS.length : 4;
+  return Math.floor(Math.random() * padCount);
+}
 
 export default function ChromaticGame() {
   const [phase, setPhase] = useState<GamePhase>("intro");
@@ -77,6 +99,8 @@ export default function ChromaticGame() {
       playbackTimeoutsRef.current.push(t);
     });
 
+    const playbackGap = Math.max(100, 200 - sequenceRef.current.length * 12);
+
     for (let i = 0; i < sequenceRef.current.length; i++) {
       if (!isMountedRef.current) return;
 
@@ -95,9 +119,9 @@ export default function ChromaticGame() {
       if (!isMountedRef.current) return;
       setActivePad(null);
 
-      // Gap between pads (200ms)
+      // Later rounds keep their longer sequences moving at a quicker pace.
       await new Promise<void>((resolve) => {
-        const t = window.setTimeout(resolve, 200);
+        const t = window.setTimeout(resolve, playbackGap);
         playbackTimeoutsRef.current.push(t);
       });
     }
@@ -118,7 +142,7 @@ export default function ChromaticGame() {
   const startGame = async () => {
     await unlockAudioContext();
     playBlip(440, 80);
-    sequenceRef.current = [Math.floor(Math.random() * 4)];
+    sequenceRef.current = [randomPadId(1)];
     playerPosRef.current = 0;
     setScore(0);
     setActivePad(null);
@@ -164,7 +188,7 @@ export default function ChromaticGame() {
           // Completed the sequence — grow it
           const newLength = sequenceRef.current.length;
           setScore(newLength);
-          sequenceRef.current.push(Math.floor(Math.random() * 4));
+          sequenceRef.current.push(randomPadId(sequenceRef.current.length + 1));
           playerPosRef.current = 0;
 
           // Brief pause then replay
@@ -201,63 +225,14 @@ export default function ChromaticGame() {
   // ─── INTRO ──────────────────────────
   if (phase === "intro") {
     return (
-      <div
-        className="flex-1 flex flex-col items-center justify-center px-6 fade-in"
-        style={{ fontFamily: "var(--font-body)" }}
-      >
-        <h1
-          style={{
-            fontFamily: "var(--font-display)",
-            fontSize: "clamp(1.3rem, 5vw, 2.2rem)",
-            color: "var(--chromatic-accent)",
-            letterSpacing: "0.08em",
-            marginBottom: "1rem",
-            textShadow: "0 0 20px rgba(255, 46, 196, 0.5)",
-          }}
-        >
-          CHROMATIC
-        </h1>
-        <p
-          style={{
-            color: "rgba(255,255,255,0.5)",
-            fontSize: "0.85rem",
-            textAlign: "center",
-            marginBottom: "0.5rem",
-            maxWidth: "280px",
-          }}
-        >
-          Watch the sequence. Repeat it back. Each round adds one more.
-        </p>
-        <p
-          style={{
-            color: "rgba(255,255,255,0.3)",
-            fontSize: "0.7rem",
-            textAlign: "center",
-            marginBottom: "2.5rem",
-          }}
-        >
-          One wrong tap and it's over
-        </p>
-
-        <button
-          onClick={startGame}
-          className="blink-prompt focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--chromatic-accent)] rounded"
-          style={{
-            fontFamily: "var(--font-display)",
-            fontSize: "0.7rem",
-            color: "var(--chromatic-accent)",
-            letterSpacing: "0.1em",
-            padding: "1rem 2rem",
-            border: "2px solid var(--chromatic-accent)",
-            background: "transparent",
-            cursor: "pointer",
-          }}
-          aria-label="Start game"
-        >
-          PRESS START
-        </button>
-      </div>
-    );
+      <GameIntro
+        gameName="CHROMATIC"
+        description="Watch the sequence, then repeat it by tapping the pads in order. One mistake ends the run."
+        hint="Tap the pads in order or press keys 1-6"
+        accentColor="var(--chromatic-accent)"
+        onStart={startGame}
+      />
+      );
   }
 
   // ─── GAME OVER ──────────────────────
@@ -478,12 +453,12 @@ export default function ChromaticGame() {
         {phase === "playback" ? "WATCH..." : "YOUR TURN"}
       </p>
 
-      {/* 2x2 Pad Grid */}
+      {/* Pad grid expands when the sequence reaches the later rounds. */}
       <div
-        className="grid grid-cols-2 gap-3 w-full max-w-[280px] aspect-square"
+        className={`grid ${sequenceRef.current.length >= 4 ? "grid-cols-3" : "grid-cols-2"} gap-3 w-full max-w-[280px] aspect-square`}
         style={{ touchAction: "none" }}
       >
-        {PADS.map((pad) => {
+        {PADS.slice(0, sequenceRef.current.length >= 4 ? 6 : 4).map((pad) => {
           const isActive = activePad === pad.id;
           return (
             <button

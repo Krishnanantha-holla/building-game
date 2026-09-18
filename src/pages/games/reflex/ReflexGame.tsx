@@ -3,8 +3,9 @@ import { Link } from "react-router-dom";
 import { computeScore, addToLeaderboard } from "@/lib/scoring";
 import type { LeaderboardEntry } from "@/lib/scoring";
 import { unlockAudioContext, playBlip } from "@/lib/audio-engine";
+import GameIntro from "@/components/GameIntro";
 
-type GamePhase = "intro" | "waiting" | "ready" | "tooSoon" | "result" | "gameover";
+type GamePhase = "intro" | "waiting" | "flash" | "tooSoon" | "result" | "gameover";
 
 const TOTAL_ROUNDS = 5;
 const PENALTY_TIME = 600;
@@ -71,7 +72,7 @@ export default function ReflexGame() {
 
     const delay = Math.floor(Math.random() * 2500) + 1500;
     timeoutRef.current = window.setTimeout(() => {
-      setPhase("ready");
+      setPhase("flash");
       startTimeRef.current = performance.now();
       playBlip(600, 80);
     }, delay);
@@ -117,7 +118,7 @@ export default function ReflexGame() {
       timeoutRef.current = window.setTimeout(() => {
         advanceRound(newTimes);
       }, 1500);
-    } else if (phase === "ready") {
+    } else if (phase === "flash") {
       const reactionTime = Math.round(performance.now() - startTimeRef.current);
       playBlip(880, 80);
       setPhase("result");
@@ -137,7 +138,7 @@ export default function ReflexGame() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
         (e.code === "Space" || e.code === "Enter") &&
-        (phase === "waiting" || phase === "ready")
+        (phase === "waiting" || phase === "flash")
       ) {
         e.preventDefault();
         handleAction();
@@ -152,79 +153,31 @@ export default function ReflexGame() {
     validTimes.length > 0
       ? Math.round(validTimes.reduce((a, b) => a + b, 0) / validTimes.length)
       : 0;
+  const fastestTime = validTimes.length > 0 ? Math.min(...validTimes) : null;
 
   // ─── INTRO ──────────────────────────
   if (phase === "intro") {
     return (
-      <div
-        className="flex-1 flex flex-col items-center justify-center px-6 fade-in"
-        style={{ fontFamily: "var(--font-body)" }}
-      >
-        <h1
-          style={{
-            fontFamily: "var(--font-display)",
-            fontSize: "clamp(1.5rem, 6vw, 2.5rem)",
-            color: "var(--reflex-accent)",
-            letterSpacing: "0.1em",
-            marginBottom: "1rem",
-            textShadow: "0 0 20px rgba(255, 59, 48, 0.5)",
-          }}
-        >
-          REFLEX
-        </h1>
-        <p
-          style={{
-            color: "rgba(255,255,255,0.5)",
-            fontSize: "0.9rem",
-            textAlign: "center",
-            marginBottom: "0.5rem",
-            maxWidth: "280px",
-          }}
-        >
-          Wait for the flash. Tap the instant it appears.
-        </p>
-        <p
-          style={{
-            color: "rgba(255,255,255,0.3)",
-            fontSize: "0.75rem",
-            textAlign: "center",
-            marginBottom: "2.5rem",
-          }}
-        >
-          5 rounds · Fastest average wins
-        </p>
-
-        <button
-          onClick={handleStart}
-          className="blink-prompt focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--reflex-accent)] rounded"
-          style={{
-            fontFamily: "var(--font-display)",
-            fontSize: "0.7rem",
-            color: "var(--reflex-accent)",
-            letterSpacing: "0.1em",
-            padding: "1rem 2rem",
-            border: "2px solid var(--reflex-accent)",
-            background: "transparent",
-            cursor: "pointer",
-          }}
-          aria-label="Start game"
-        >
-          PRESS START
-        </button>
-      </div>
+      <GameIntro
+        gameName="REFLEX"
+        description="Wait for the flash, then tap as fast as you can. Tapping early is a fail."
+        hint="Tap the screen or press SPACE when it flashes"
+        accentColor="var(--reflex-accent)"
+        onStart={handleStart}
+      />
     );
   }
 
-  // ─── GAMEPLAY (waiting / ready / tooSoon / result) ──────────
+  // ─── GAMEPLAY (waiting / flash / tooSoon / result) ──────────
   if (phase !== "gameover") {
     const bgColor =
-      phase === "ready"
+      phase === "flash"
         ? "var(--reflex-accent)"
         : phase === "tooSoon"
-        ? "#1a0a08"
+        ? "#5c1018"
         : "var(--crt-bg)";
     const textColor =
-      phase === "ready"
+      phase === "flash"
         ? "#fff"
         : phase === "tooSoon"
         ? "var(--reflex-accent)"
@@ -247,7 +200,7 @@ export default function ReflexGame() {
         }}
         role="button"
         tabIndex={0}
-        aria-label={phase === "ready" ? "Tap now!" : "Wait for the flash"}
+        aria-label={phase === "flash" ? "Tap now!" : "Wait for the flash"}
       >
         {/* Round indicator */}
         <div
@@ -276,7 +229,7 @@ export default function ReflexGame() {
           </span>
         )}
 
-        {phase === "ready" && (
+        {phase === "flash" && (
           <span
             style={{
               fontFamily: "var(--font-display)",
@@ -424,16 +377,21 @@ export default function ReflexGame() {
                 background:
                   t >= PENALTY_TIME
                     ? "rgba(255, 59, 48, 0.15)"
+                    : t === fastestTime
+                    ? "rgba(255, 176, 0, 0.2)"
                     : "rgba(57, 255, 138, 0.1)",
+                border: t === fastestTime ? "1px solid #ffb000" : "1px solid transparent",
                 fontFamily: "var(--font-body)",
                 fontSize: "0.65rem",
                 color:
                   t >= PENALTY_TIME
                     ? "var(--reflex-accent)"
+                    : t === fastestTime
+                    ? "#ffb000"
                     : "var(--phosphor)",
               }}
             >
-              {t >= PENALTY_TIME ? "MISS" : `${t}ms`}
+              {t >= PENALTY_TIME ? "MISS" : t === fastestTime ? `${t}ms FASTEST` : `${t}ms`}
             </div>
           ))}
         </div>

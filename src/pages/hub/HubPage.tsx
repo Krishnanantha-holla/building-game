@@ -30,7 +30,6 @@ const GAMES = [
     description: "Feel the rhythm, keep the beat — timing is everything.",
     icon: "🥁",
     accent: "#ffb000",
-    comingSoon: true,
   },
 ];
 

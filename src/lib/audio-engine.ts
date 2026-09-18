@@ -85,6 +85,22 @@ export function playBlip(frequency: number, durationMs: number = 80): void {
   };
 }
 
+/** Starts an audible metronome and reports each beat's performance timestamp. */
+export function scheduleBeat(
+  bpm: number,
+  onBeat?: (timestamp: number) => void
+): () => void {
+  const intervalMs = 60000 / bpm;
+  const emitBeat = () => {
+    playBlip(880, 35);
+    onBeat?.(performance.now());
+  };
+
+  emitBeat();
+  const intervalId = window.setInterval(emitBeat, intervalMs);
+  return () => window.clearInterval(intervalId);
+}
+
 // ─── Spatial Audio (used by Echo game) ───────────────────────────────
 
 interface SpatialPingOptions {

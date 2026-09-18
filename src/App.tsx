@@ -3,6 +3,7 @@ import HubPage from "./pages/hub/HubPage";
 import EchoGame from "./pages/games/echo/EchoGame";
 import ReflexGame from "./pages/games/reflex/ReflexGame";
 import ChromaticGame from "./pages/games/chromatic/ChromaticGame";
+import TempoGame from "./pages/games/tempo/TempoGame";
 import Navbar from "./components/Navbar";
 
 function GamesLayout({ children }: { children: React.ReactNode }) {
@@ -39,6 +40,14 @@ function App() {
         element={
           <GamesLayout>
             <ChromaticGame />
+          </GamesLayout>
+        }
+      />
+      <Route
+        path="/games/tempo"
+        element={
+          <GamesLayout>
+            <TempoGame />
           </GamesLayout>
         }
       />

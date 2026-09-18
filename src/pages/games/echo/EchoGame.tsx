@@ -14,6 +14,7 @@ import {
 import type { LeaderboardEntry } from "@/lib/scoring";
 import CompassUI from "./CompassUI";
 import ElevationSlider from "./ElevationSlider";
+import GameIntro from "@/components/GameIntro";
 
 type GamePhase = "intro" | "headphones" | "playing" | "feedback" | "gameover";
 
@@ -230,51 +231,14 @@ export default function EchoGame() {
   // ─── INTRO SCREEN ──────────────────────────────────
   if (gamePhase === "intro") {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center px-6 fade-in">
-        {/* Sonar decoration */}
-        <div className="relative mb-8">
-          <div className="w-28 h-28 rounded-full border-2 border-accent/20 flex items-center justify-center">
-            <div className="w-20 h-20 rounded-full border border-accent/30 flex items-center justify-center">
-              <div className="w-12 h-12 rounded-full border border-accent/40 flex items-center justify-center">
-                <div className="w-4 h-4 rounded-full bg-accent/60" />
-              </div>
-            </div>
-          </div>
-          {/* Sweep line */}
-          <div
-            className="absolute inset-0 sonar-sweep"
-            style={{ transformOrigin: "50% 50%" }}
-          >
-            <div
-              className="absolute top-1/2 left-1/2 w-0.5 bg-gradient-to-t from-accent/40 to-transparent"
-              style={{
-                height: "56px",
-                transformOrigin: "bottom center",
-                transform: "translateX(-50%) translateY(-100%)",
-              }}
-            />
-          </div>
-        </div>
-
-        <h1 className="text-5xl font-extrabold tracking-tight mb-2 gradient-text">
-          Echo
-        </h1>
-        <p className="text-text-muted text-center mb-2 text-lg">
-          Locate the sound in 3D space
-        </p>
-        <p className="text-text-dim text-center text-sm mb-10 max-w-xs leading-relaxed">
-          A ping will play through headphones — spin the compass to where you
-          think it came from, then lock in your answer.
-        </p>
-
-        <button
-          onClick={handlePlay}
-          className="px-10 py-4 rounded-2xl bg-gradient-to-r from-primary to-accent text-white font-bold text-lg tracking-wide btn-glow transition-all duration-300 hover:scale-105 active:scale-95"
-        >
-          ▶ Play
-        </button>
-      </div>
-    );
+      <GameIntro
+        gameName="ECHO"
+        description="Locate the sound in 3D space, then lock in the direction you think it came from."
+        hint="Use headphones, drag to aim, then lock in"
+        accentColor="var(--echo-accent)"
+        onStart={handlePlay}
+      />
+      );
   }
 
   // ─── HEADPHONES OVERLAY ────────────────────────────
