@@ -1,0 +1,196 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: #0a0b1e;
+  --color-surface: #12142d;
+  --color-surface-hover: #1a1d40;
+  --color-primary: #6c5ce7;
+  --color-primary-glow: #a29bfe;
+  --color-accent: #00cec9;
+  --color-accent-glow: #55efc4;
+  --color-danger: #ff6b6b;
+  --color-warning: #feca57;
+  --color-text: #e8e8f0;
+  --color-text-muted: #8b8ba3;
+  --color-text-dim: #5a5a7a;
+  --color-border: #2d2d5e;
+  --color-sonar: #00cec9;
+  --color-sonar-glow: rgba(0, 206, 201, 0.3);
+  --font-sans: var(--font-outfit);
+}
+
+/* Safe area insets for notched phones */
+html {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+/* Animated background grid pattern */
+.arcade-bg {
+  background-image:
+    linear-gradient(rgba(108, 92, 231, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(108, 92, 231, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Sonar sweep animation for Echo game */
+@keyframes sonar-sweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.sonar-sweep {
+  animation: sonar-sweep 4s linear infinite;
+}
+
+/* Pulse animation for scoring feedback */
+@keyframes score-pop {
+  0% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.score-pop {
+  animation: score-pop 0.5s ease-out;
+}
+
+/* Streak pop animation */
+@keyframes streak-pop {
+  0% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.2) rotate(-5deg); }
+  50% { transform: scale(1.4) rotate(5deg); }
+  75% { transform: scale(1.2) rotate(-3deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+.streak-pop {
+  animation: streak-pop 0.6s ease-out;
+}
+
+/* Count up animation */
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.count-up {
+  animation: count-up 0.4s ease-out;
+}
+
+/* Glow effect for game tiles */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(108, 92, 231, 0.2), inset 0 0 20px rgba(108, 92, 231, 0.05); }
+  50% { box-shadow: 0 0 30px rgba(108, 92, 231, 0.4), inset 0 0 30px rgba(108, 92, 231, 0.1); }
+}
+
+.glow-pulse {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+/* Fade in animation */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fade-in 0.6s ease-out;
+}
+
+@keyframes fade-in-delay {
+  0%, 30% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in-delay {
+  animation: fade-in-delay 0.9s ease-out;
+}
+
+/* Scanline effect */
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+.scanline::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(to right, transparent, rgba(108, 92, 231, 0.12), transparent);
+  animation: scanline 8s linear infinite;
+  pointer-events: none;
+  z-index: 100;
+}
+
+/* Shimmer for coming soon tiles */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, transparent 30%, rgba(108, 92, 231, 0.08) 50%, transparent 70%);
+  background-size: 200% 100%;
+  animation: shimmer 3s linear infinite;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-background);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}
+
+/* Gradient text utility */
+.gradient-text {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glassmorphism */
+.glass {
+  background: rgba(18, 20, 45, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(45, 45, 94, 0.5);
+}
+
+/* Button glow */
+.btn-glow {
+  box-shadow: 0 0 20px rgba(108, 92, 231, 0.3), 0 0 40px rgba(108, 92, 231, 0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.btn-glow:hover {
+  box-shadow: 0 0 30px rgba(108, 92, 231, 0.5), 0 0 60px rgba(108, 92, 231, 0.2);
+}
+
+/* Sonar ring pulse */
+@keyframes ring-pulse {
+  0% { transform: scale(0.8); opacity: 0.6; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+.ring-pulse {
+  animation: ring-pulse 2s ease-out infinite;
+}
