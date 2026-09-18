@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import GameTile from "@/components/GameTile";
 
@@ -6,77 +7,110 @@ const GAMES = [
     id: "echo",
     title: "Echo",
     description: "Locate sounds in 3D space — where is the ping coming from?",
-    icon: "🎯",
-    color: "#00cec9",
+    icon: "📡",
+    accent: "#00e5ff",
   },
   {
     id: "reflex",
     title: "Reflex",
-    description: "Test your reaction speed with split-second challenges",
+    description: "Test your reaction speed — tap the instant the screen flashes.",
     icon: "⚡",
-    color: "#feca57",
-    comingSoon: true,
+    accent: "#ff3b30",
   },
   {
     id: "chromatic",
     title: "Chromatic",
-    description: "Match colors from memory before they fade away",
+    description: "Repeat the color sequence from memory. How long can you go?",
     icon: "🎨",
-    color: "#ff6b6b",
-    comingSoon: true,
+    accent: "#ff2ec4",
   },
   {
     id: "tempo",
     title: "Tempo",
-    description: "Feel the rhythm, keep the beat — timing is everything",
+    description: "Feel the rhythm, keep the beat — timing is everything.",
     icon: "🥁",
-    color: "#a29bfe",
+    accent: "#ffb000",
     comingSoon: true,
   },
 ];
 
-export default function HomePage() {
-  return (
-    <>
-      <Navbar />
-      <main className="flex-1 flex flex-col">
-        {/* Hero Section */}
-        <section className="pt-24 pb-8 px-4 text-center fade-in">
-          <div className="max-w-2xl mx-auto">
-            {/* Decorative rings */}
-            <div className="relative inline-block mb-6">
-              <div className="absolute inset-0 rounded-full border border-primary/20 ring-pulse" />
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-3xl shadow-lg shadow-primary/30">
-                🧠
-              </div>
-            </div>
+export default function HubPage() {
+  const [booted, setBooted] = useState(false);
+  const [bootDone, setBootDone] = useState(false);
 
-            <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4">
-              <span className="gradient-text">INSTINCT</span>
+  useEffect(() => {
+    // Check if boot animation already played this session
+    const alreadyBooted = sessionStorage.getItem("instinct-booted");
+    if (alreadyBooted) {
+      setBooted(true);
+      setBootDone(true);
+      return;
+    }
+
+    // Respect prefers-reduced-motion
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduced) {
+      sessionStorage.setItem("instinct-booted", "1");
+      setBooted(true);
+      setBootDone(true);
+      return;
+    }
+
+    // Play boot animation
+    setBooted(true);
+    const timer = setTimeout(() => {
+      sessionStorage.setItem("instinct-booted", "1");
+      setBootDone(true);
+    }, 800); // flicker 300ms + degauss 500ms
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!booted) {
+    return (
+      <div style={{ background: "var(--crt-bg)", minHeight: "100dvh" }} />
+    );
+  }
+
+  return (
+    <div className={!bootDone ? "crt-boot" : ""}>
+      <Navbar />
+      <main
+        className="flex-1 flex flex-col"
+        style={{ fontFamily: "var(--font-body)" }}
+      >
+        {/* Hero */}
+        <section className="pt-24 pb-6 px-4 text-center fade-in">
+          <div className="max-w-2xl mx-auto">
+            <h1
+              className="crt-logo-glow mb-3"
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "clamp(1.4rem, 5vw, 2.2rem)",
+                color: "var(--phosphor)",
+                letterSpacing: "0.12em",
+                lineHeight: 1.4,
+              }}
+            >
+              INSTINCT
             </h1>
-            <p className="text-lg sm:text-xl text-text-muted font-light leading-relaxed max-w-md mx-auto">
+            <p
+              style={{
+                color: "rgba(57, 255, 138, 0.5)",
+                fontFamily: "var(--font-body)",
+                fontSize: "0.9rem",
+                letterSpacing: "0.05em",
+              }}
+            >
               Test your senses. Trust your instincts.
-            </p>
-            <p className="text-sm text-text-dim mt-2">
-              Quick-fire sensory mini-games for sharp minds
             </p>
           </div>
         </section>
 
-        {/* Games Grid */}
+        {/* Game Cabinets Grid */}
         <section className="flex-1 px-4 pb-12 fade-in-delay">
           <div className="max-w-3xl mx-auto">
-            <div className="flex items-center gap-3 mb-6">
-              <h2 className="text-sm font-semibold uppercase tracking-widest text-text-dim">
-                Games
-              </h2>
-              <div className="flex-1 h-px bg-border" />
-              <span className="text-xs text-text-dim">
-                {GAMES.filter((g) => !g.comingSoon).length} playable
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {GAMES.map((game) => (
                 <GameTile key={game.id} {...game} />
               ))}
@@ -86,11 +120,18 @@ export default function HomePage() {
 
         {/* Footer */}
         <footer className="py-6 text-center">
-          <p className="text-xs text-text-dim">
-            More games coming soon · Built with 🎮 by instinct
+          <p
+            style={{
+              fontFamily: "var(--font-body)",
+              fontSize: "0.7rem",
+              color: "rgba(57, 255, 138, 0.2)",
+              letterSpacing: "0.08em",
+            }}
+          >
+            INSERT COIN TO CONTINUE
           </p>
         </footer>
       </main>
-    </>
+    </div>
   );
 }

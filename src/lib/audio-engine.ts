@@ -1,7 +1,7 @@
 /**
- * Web Audio engine for spatial audio games.
- * Opt-in module — only imported by games that need spatial sound.
- * Not imported by the hub or by lib/scoring.ts.
+ * Web Audio engine for Instinct Arcade.
+ * Provides spatial audio (HRTF) for Echo and generic blip sounds for all games' UI.
+ * Opt-in module — only imported by games/components that need sound.
  */
 
 let audioContext: AudioContext | null = null;
@@ -42,6 +42,50 @@ export async function unlockAudioContext(): Promise<AudioContext> {
 export function getAudioContext(): AudioContext | null {
   return audioContext;
 }
+
+// ─── Generic Blip Sound ──────────────────────────────────────────────
+
+/**
+ * Plays a short chiptune blip sound. Used for UI navigation sounds,
+ * Simon-Says pad tones, and general game feedback.
+ *
+ * @param frequency - Oscillator frequency in Hz (e.g., 440 for A4)
+ * @param durationMs - Duration of the blip in milliseconds (default: 80)
+ */
+export function playBlip(frequency: number, durationMs: number = 80): void {
+  if (!audioContext || audioContext.state === "closed") {
+    return;
+  }
+
+  const ctx = audioContext;
+  const now = ctx.currentTime;
+  const dur = durationMs / 1000;
+
+  // Square wave for that chiptune feel
+  const osc = ctx.createOscillator();
+  osc.type = "square";
+  osc.frequency.setValueAtTime(frequency, now);
+
+  // Gain envelope: quick attack, short sustain, quick decay
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(0.3, now + 0.005); // 5ms attack
+  gain.gain.setValueAtTime(0.3, now + dur * 0.6);       // sustain
+  gain.gain.exponentialRampToValueAtTime(0.001, now + dur); // decay
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc.start(now);
+  osc.stop(now + dur);
+
+  osc.onended = () => {
+    osc.disconnect();
+    gain.disconnect();
+  };
+}
+
+// ─── Spatial Audio (used by Echo game) ───────────────────────────────
 
 interface SpatialPingOptions {
   /** Azimuth in degrees (0=front/north, 90=right/east, 180=behind, 270=left/west) */

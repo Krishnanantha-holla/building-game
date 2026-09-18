@@ -1,13 +1,12 @@
-"use client";
-
 import { Link } from "react-router-dom";
+import { playBlip, getAudioContext } from "@/lib/audio-engine";
 
 interface GameTileProps {
   id: string;
   title: string;
   description: string;
   icon: string;
-  color: string;
+  accent: string;
   comingSoon?: boolean;
 }
 
@@ -16,56 +15,84 @@ export default function GameTile({
   title,
   description,
   icon,
-  color,
+  accent,
   comingSoon = false,
 }: GameTileProps) {
+  const handleHover = () => {
+    if (getAudioContext()) {
+      playBlip(660, 30);
+    }
+  };
+
+  const handleFocus = () => {
+    if (getAudioContext()) {
+      playBlip(660, 30);
+    }
+  };
+
   const content = (
     <div
-      className={`
-        relative rounded-2xl border border-border bg-surface p-6
-        transition-all duration-300 ease-out min-h-[140px]
-        flex flex-col justify-between overflow-hidden group
-        ${comingSoon
-          ? "opacity-50 cursor-not-allowed shimmer"
-          : "hover:scale-[1.03] hover:border-primary/50 hover:bg-surface-hover cursor-pointer active:scale-[0.98] glow-pulse"
-        }
-      `}
+      className={`cabinet ${comingSoon ? "cabinet-dim" : "cabinet-lit"}`}
       style={{
-        ["--tile-color" as string]: color,
+        ["--cabinet-accent" as string]: accent,
       }}
+      onMouseEnter={comingSoon ? undefined : handleHover}
+      onFocus={comingSoon ? undefined : handleFocus}
+      tabIndex={comingSoon ? -1 : 0}
+      role={comingSoon ? "presentation" : "link"}
+      aria-label={comingSoon ? `${title} — coming soon` : `Play ${title}`}
     >
-      {/* Accent glow in corner */}
+      {/* Marquee Title Bar */}
       <div
-        className="absolute -top-12 -right-12 w-32 h-32 rounded-full blur-3xl opacity-20 transition-opacity duration-300 group-hover:opacity-40"
-        style={{ background: color }}
-      />
-
-      <div className="relative z-10">
-        <div className="flex items-start justify-between mb-3">
-          <span className="text-4xl" role="img" aria-label={title}>
-            {icon}
-          </span>
-          {comingSoon && (
-            <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full bg-primary/20 text-primary-glow border border-primary/30">
-              Soon
-            </span>
-          )}
-        </div>
-        <h3 className="text-lg font-bold text-text mb-1">{title}</h3>
-        <p className="text-sm text-text-muted leading-relaxed">{description}</p>
+        className="cabinet-marquee"
+        style={{
+          background: comingSoon
+            ? "rgba(255,255,255,0.03)"
+            : `linear-gradient(135deg, ${accent}22, ${accent}11)`,
+          borderBottom: `1px solid ${comingSoon ? "rgba(255,255,255,0.05)" : accent + "33"}`,
+        }}
+      >
+        <span className="cabinet-marquee-icon">{icon}</span>
+        <span
+          className="cabinet-marquee-title"
+          style={{
+            color: comingSoon ? "rgba(255,255,255,0.2)" : accent,
+          }}
+        >
+          {title}
+        </span>
       </div>
 
-      {/* Bottom accent bar */}
-      <div className="mt-4 flex items-center gap-2">
-        <div
-          className="h-0.5 flex-1 rounded-full opacity-30"
-          style={{ background: `linear-gradient(to right, ${color}, transparent)` }}
-        />
+      {/* Screen Area */}
+      <div className="cabinet-screen">
+        <p
+          className="cabinet-description"
+          style={{
+            color: comingSoon ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.6)",
+          }}
+        >
+          {description}
+        </p>
+
+        {/* CTA or locked state */}
         {!comingSoon && (
-          <span className="text-xs font-medium text-text-dim group-hover:text-accent transition-colors">
-            Play →
-          </span>
+          <div className="cabinet-cta">
+            <span
+              className="blink-prompt"
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "0.6rem",
+                color: accent,
+                letterSpacing: "0.1em",
+              }}
+            >
+              PRESS START
+            </span>
+          </div>
         )}
+
+        {/* Static noise overlay for locked cabinets */}
+        {comingSoon && <div className="cabinet-static" aria-hidden="true" />}
       </div>
     </div>
   );
@@ -75,7 +102,11 @@ export default function GameTile({
   }
 
   return (
-    <Link to={`/games/${id}`} className="block no-underline">
+    <Link
+      to={`/games/${id}`}
+      className="block no-underline focus-visible:outline-none"
+      style={{ ["--cabinet-accent" as string]: accent }}
+    >
       {content}
     </Link>
   );
