@@ -1,10 +1,43 @@
 /**
  * Web Audio engine for Instinct Arcade.
- * Provides spatial audio (HRTF) for Echo and generic blip sounds for all games' UI.
+ * Provides spatial audio (HRTF) for Echo, generic blip sounds for all games' UI,
+ * and metronome click scheduling for Tempo.
  * Opt-in module — only imported by games/components that need sound.
  */
 
 let audioContext: AudioContext | null = null;
+
+/** Global mute flag — when true, all sound output is suppressed. */
+let globalMuted = false;
+
+/**
+ * Set global mute state. When muted, all play* functions return without producing sound.
+ */
+export function setMuted(muted: boolean): void {
+  globalMuted = muted;
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem("instinct:muted", muted ? "1" : "0");
+    } catch { /* ignore */ }
+  }
+}
+
+/**
+ * Returns current mute state.
+ */
+export function isMuted(): boolean {
+  return globalMuted;
+}
+
+/**
+ * Load mute preference from localStorage. Call once at app startup.
+ */
+export function loadMutePreference(): void {
+  if (typeof window === "undefined") return;
+  try {
+    globalMuted = localStorage.getItem("instinct:muted") === "1";
+  } catch { /* ignore */ }
+}
 
 /**
  * Creates and unlocks the AudioContext. MUST be called inside a user gesture
@@ -53,6 +86,7 @@ export function getAudioContext(): AudioContext | null {
  * @param durationMs - Duration of the blip in milliseconds (default: 80)
  */
 export function playBlip(frequency: number, durationMs: number = 80): void {
+  if (globalMuted) return;
   if (!audioContext || audioContext.state === "closed") {
     return;
   }
@@ -85,20 +119,70 @@ export function playBlip(frequency: number, durationMs: number = 80): void {
   };
 }
 
-/** Starts an audible metronome and reports each beat's performance timestamp. */
-export function scheduleBeat(
-  bpm: number,
-  onBeat?: (timestamp: number) => void
-): () => void {
-  const intervalMs = 60000 / bpm;
-  const emitBeat = () => {
-    playBlip(880, 35);
-    onBeat?.(performance.now());
-  };
+// ─── Metronome Click (used by Tempo game) ────────────────────────────
 
-  emitBeat();
-  const intervalId = window.setInterval(emitBeat, intervalMs);
-  return () => window.clearInterval(intervalId);
+/**
+ * Plays a short, sharp click sound suitable for a metronome beat.
+ * Uses white noise filtered to a click character.
+ */
+export function playMetronomeClick(): void {
+  if (globalMuted) return;
+  if (!audioContext || audioContext.state === "closed") return;
+
+  const ctx = audioContext;
+  const now = ctx.currentTime;
+
+  // Short burst oscillator for a tick sound
+  const osc = ctx.createOscillator();
+  osc.type = "triangle";
+  osc.frequency.setValueAtTime(1200, now);
+  osc.frequency.exponentialRampToValueAtTime(600, now + 0.03);
+
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.5, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc.start(now);
+  osc.stop(now + 0.06);
+
+  osc.onended = () => {
+    osc.disconnect();
+    gain.disconnect();
+  };
+}
+
+/**
+ * Plays a metronome click scheduled at a precise Web Audio time.
+ * Use this for tight timing accuracy instead of playMetronomeClick().
+ */
+export function playMetronomeClickAt(atTime: number): void {
+  if (globalMuted) return;
+  if (!audioContext || audioContext.state === "closed") return;
+
+  const ctx = audioContext;
+
+  const osc = ctx.createOscillator();
+  osc.type = "triangle";
+  osc.frequency.setValueAtTime(1200, atTime);
+  osc.frequency.exponentialRampToValueAtTime(600, atTime + 0.03);
+
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.5, atTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, atTime + 0.06);
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc.start(atTime);
+  osc.stop(atTime + 0.06);
+
+  osc.onended = () => {
+    osc.disconnect();
+    gain.disconnect();
+  };
 }
 
 // ─── Spatial Audio (used by Echo game) ───────────────────────────────
@@ -127,6 +211,7 @@ interface SpatialPingOptions {
  * Web Audio uses right-hand coordinate system where -z is forward.
  */
 export function playSpatialPing(options: SpatialPingOptions): void {
+  if (globalMuted) return;
   if (!audioContext || audioContext.state === "closed") {
     console.warn("AudioContext not initialized. Call unlockAudioContext() first.");
     return;

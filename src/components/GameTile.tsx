@@ -8,6 +8,7 @@ interface GameTileProps {
   icon: string;
   accent: string;
   comingSoon?: boolean;
+  attractHighlight?: boolean;
 }
 
 export default function GameTile({
@@ -17,6 +18,7 @@ export default function GameTile({
   icon,
   accent,
   comingSoon = false,
+  attractHighlight = false,
 }: GameTileProps) {
   const handleHover = () => {
     if (getAudioContext()) {
@@ -35,6 +37,14 @@ export default function GameTile({
       className={`cabinet ${comingSoon ? "cabinet-dim" : "cabinet-lit"}`}
       style={{
         ["--cabinet-accent" as string]: accent,
+        // Attract mode: pulse glow when highlighted
+        ...(attractHighlight && !comingSoon
+          ? {
+              boxShadow: `0 0 30px -3px ${accent}, 0 0 60px -10px ${accent}50`,
+              borderColor: `color-mix(in srgb, ${accent} 60%, var(--color-border))`,
+              transition: "box-shadow 0.8s ease, border-color 0.8s ease",
+            }
+          : {}),
       }}
       onMouseEnter={comingSoon ? undefined : handleHover}
       onFocus={comingSoon ? undefined : handleFocus}

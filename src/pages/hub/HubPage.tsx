@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Navbar from "@/components/Navbar";
 import GameTile from "@/components/GameTile";
 
@@ -36,6 +36,10 @@ const GAMES = [
 export default function HubPage() {
   const [booted, setBooted] = useState(false);
   const [bootDone, setBootDone] = useState(false);
+  const [attractIndex, setAttractIndex] = useState(-1);
+  const idleTimerRef = useRef<number | null>(null);
+  const attractIntervalRef = useRef<number | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Check if boot animation already played this session
@@ -57,12 +61,50 @@ export default function HubPage() {
 
     // Play boot animation
     setBooted(true);
-    const timer = setTimeout(() => {
+    const timer = window.setTimeout(() => {
       sessionStorage.setItem("instinct-booted", "1");
       setBootDone(true);
-    }, 800); // flicker 300ms + degauss 500ms
+    }, 800);
 
     return () => clearTimeout(timer);
+  }, []);
+
+  // Attract mode: after 25s idle, cycle cabinet glows
+  useEffect(() => {
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduced) return;
+
+    const resetIdle = () => {
+      // Clear attract mode
+      setAttractIndex(-1);
+      if (attractIntervalRef.current) {
+        clearInterval(attractIntervalRef.current);
+        attractIntervalRef.current = null;
+      }
+
+      // Reset idle timer
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      idleTimerRef.current = window.setTimeout(() => {
+        // Start attract mode: cycle through cabinets
+        let idx = 0;
+        setAttractIndex(0);
+        attractIntervalRef.current = window.setInterval(() => {
+          idx = (idx + 1) % GAMES.length;
+          setAttractIndex(idx);
+        }, 2000);
+      }, 25000);
+    };
+
+    resetIdle();
+
+    const events = ["mousemove", "mousedown", "touchstart", "keydown", "scroll"];
+    events.forEach((e) => window.addEventListener(e, resetIdle, { passive: true }));
+
+    return () => {
+      events.forEach((e) => window.removeEventListener(e, resetIdle));
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      if (attractIntervalRef.current) clearInterval(attractIntervalRef.current);
+    };
   }, []);
 
   if (!booted) {
@@ -72,7 +114,7 @@ export default function HubPage() {
   }
 
   return (
-    <div className={!bootDone ? "crt-boot" : ""}>
+    <div className={!bootDone ? "crt-boot" : ""} ref={containerRef}>
       <Navbar />
       <main
         className="flex-1 flex flex-col"
@@ -110,8 +152,12 @@ export default function HubPage() {
         <section className="flex-1 px-4 pb-12 fade-in-delay">
           <div className="max-w-3xl mx-auto">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              {GAMES.map((game) => (
-                <GameTile key={game.id} {...game} />
+              {GAMES.map((game, i) => (
+                <GameTile
+                  key={game.id}
+                  {...game}
+                  attractHighlight={attractIndex === i}
+                />
               ))}
             </div>
           </div>

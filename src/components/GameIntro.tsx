@@ -24,8 +24,8 @@ export default function GameIntro({
           fontSize: "clamp(1.3rem, 5vw, 2.2rem)",
           color: accentColor,
           letterSpacing: "0.08em",
-          marginBottom: "1rem",
-          textShadow: `0 0 20px ${accentColor}80`,
+          marginBottom: "1.25rem",
+          textShadow: `0 0 20px color-mix(in srgb, ${accentColor} 50%, transparent)`,
           textTransform: "uppercase",
         }}
       >
@@ -38,14 +38,14 @@ export default function GameIntro({
           textAlign: "center",
           marginBottom: "0.5rem",
           maxWidth: "300px",
-          lineHeight: "1.5",
+          lineHeight: "1.6",
         }}
       >
         {description}
       </p>
       <p
         style={{
-          color: "rgba(255,255,255,0.4)",
+          color: "rgba(255,255,255,0.35)",
           fontSize: "0.7rem",
           textAlign: "center",
           marginBottom: "2.5rem",
@@ -61,9 +61,9 @@ export default function GameIntro({
         className="blink-prompt focus-visible:outline-none rounded"
         style={{
           fontFamily: "var(--font-display)",
-          fontSize: "0.7rem",
+          fontSize: "0.65rem",
           color: accentColor,
-          letterSpacing: "0.1em",
+          letterSpacing: "0.12em",
           padding: "1rem 2rem",
           border: `2px solid ${accentColor}`,
           background: "transparent",

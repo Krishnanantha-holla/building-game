@@ -1,10 +1,12 @@
 import { Routes, Route } from "react-router-dom";
+import { useEffect } from "react";
 import HubPage from "./pages/hub/HubPage";
 import EchoGame from "./pages/games/echo/EchoGame";
 import ReflexGame from "./pages/games/reflex/ReflexGame";
 import ChromaticGame from "./pages/games/chromatic/ChromaticGame";
 import TempoGame from "./pages/games/tempo/TempoGame";
 import Navbar from "./components/Navbar";
+import { loadMutePreference } from "./lib/audio-engine";
 
 function GamesLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -16,6 +18,10 @@ function GamesLayout({ children }: { children: React.ReactNode }) {
 }
 
 function App() {
+  useEffect(() => {
+    loadMutePreference();
+  }, []);
+
   return (
     <Routes>
       <Route path="/" element={<HubPage />} />
