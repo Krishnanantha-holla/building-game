@@ -31,6 +31,13 @@ const GAMES = [
     icon: "🥁",
     accent: "#ffb000",
   },
+  {
+    id: "vector",
+    title: "Vector",
+    description: "Dodge the falling debris. Survive the void.",
+    icon: "🚀",
+    accent: "#b026ff",
+  },
 ];
 
 export default function HubPage() {

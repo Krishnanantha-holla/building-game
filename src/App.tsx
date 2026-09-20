@@ -5,6 +5,7 @@ import EchoGame from "./pages/games/echo/EchoGame";
 import ReflexGame from "./pages/games/reflex/ReflexGame";
 import ChromaticGame from "./pages/games/chromatic/ChromaticGame";
 import TempoGame from "./pages/games/tempo/TempoGame";
+import VectorGame from "./pages/games/vector/VectorGame";
 import Navbar from "./components/Navbar";
 import { loadMutePreference } from "./lib/audio-engine";
 
@@ -54,6 +55,14 @@ function App() {
         element={
           <GamesLayout>
             <TempoGame />
+          </GamesLayout>
+        }
+      />
+      <Route
+        path="/games/vector"
+        element={
+          <GamesLayout>
+            <VectorGame />
           </GamesLayout>
         }
       />

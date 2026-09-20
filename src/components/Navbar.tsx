@@ -38,6 +38,7 @@ export default function Navbar() {
         reflex: getLeaderboard("reflex")[0]?.score ?? "—",
         chromatic: getLeaderboard("chromatic")[0]?.score ?? "—",
         tempo: getLeaderboard("tempo")[0]?.score ?? "—",
+        vector: getLeaderboard("vector")[0]?.score ?? "—",
       }
     : null;
 
@@ -188,6 +189,7 @@ export default function Navbar() {
                 { name: "Reflex", val: stats.reflex, color: "#ff3b30" },
                 { name: "Chromatic", val: stats.chromatic, color: "#ff2ec4" },
                 { name: "Tempo", val: stats.tempo, color: "#ffb000" },
+                { name: "Vector", val: stats.vector, color: "#b026ff" },
               ].map((g) => (
                 <div
                   key={g.name}
