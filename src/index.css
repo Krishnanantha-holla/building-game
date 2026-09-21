@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════════════════════
-   INSTINCT ARCADE — CRT Retro Theme
+   REFLEX//ARC — CRT Retro Theme
    ═══════════════════════════════════════════════════════════════ */
 
 @theme inline {
@@ -19,6 +19,8 @@
   --color-warning: #ffb000;
   --color-text: #e0ffe8;
   --vector-accent: #b026ff;
+  --stroop-accent: #a6ff00;
+  --glitch-accent: #00a8ff;
   --color-text-muted: #5a9a6e;
   --color-text-dim: #2d5e3e;
   --color-border: #1e3a28;
@@ -34,6 +36,9 @@
   --reflex-accent: #ff3b30;
   --chromatic-accent: #ff2ec4;
   --tempo-accent: #ffb000;
+  --vector-accent: #b026ff;
+  --stroop-accent: #a6ff00;
+  --glitch-accent: #00a8ff;
   --cabinet-accent: var(--phosphor);
 
   /* ── Font Tokens ── */
@@ -52,6 +57,12 @@ body {
   font-family: var(--font-body);
   min-height: 100dvh;
   overflow-x: hidden;
+}
+
+#root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ═══════════════════════════════════════════════════════════════

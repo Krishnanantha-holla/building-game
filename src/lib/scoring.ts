@@ -1,5 +1,5 @@
 /**
- * Generic scoring module for Instinct Arcade.
+ * Generic scoring module for REFLEX//ARC.
  * Medium-agnostic — works for any game type (reflex, visual, audio, etc.)
  * Zero references to audio or any specific game mechanic.
  */

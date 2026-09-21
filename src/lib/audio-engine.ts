@@ -1,5 +1,5 @@
 /**
- * Web Audio engine for Instinct Arcade.
+ * Web Audio engine for REFLEX//ARC.
  * Provides spatial audio (HRTF) for Echo, generic blip sounds for all games' UI,
  * and metronome click scheduling for Tempo.
  * Opt-in module — only imported by games/components that need sound.
@@ -17,7 +17,7 @@ export function setMuted(muted: boolean): void {
   globalMuted = muted;
   if (typeof window !== "undefined") {
     try {
-      localStorage.setItem("instinct:muted", muted ? "1" : "0");
+      localStorage.setItem("reflex-arc:muted", muted ? "1" : "0");
     } catch { /* ignore */ }
   }
 }
@@ -35,7 +35,7 @@ export function isMuted(): boolean {
 export function loadMutePreference(): void {
   if (typeof window === "undefined") return;
   try {
-    globalMuted = localStorage.getItem("instinct:muted") === "1";
+    globalMuted = (localStorage.getItem("reflex-arc:muted") ?? localStorage.getItem("instinct:muted")) === "1";
   } catch { /* ignore */ }
 }
 
@@ -56,7 +56,10 @@ export async function unlockAudioContext(): Promise<AudioContext> {
 
   // iOS Safari requires resume() inside user gesture
   if (audioContext.state === "suspended") {
-    await audioContext.resume();
+    await Promise.race([
+      audioContext.resume(),
+      new Promise(r => setTimeout(r, 200))
+    ]).catch(() => {});
   }
 
   // Play a silent buffer to fully unlock on iOS

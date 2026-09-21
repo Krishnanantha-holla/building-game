@@ -39,6 +39,8 @@ export default function Navbar() {
         chromatic: getLeaderboard("chromatic")[0]?.score ?? "—",
         tempo: getLeaderboard("tempo")[0]?.score ?? "—",
         vector: getLeaderboard("vector")[0]?.score ?? "—",
+        stroop: getLeaderboard("stroop")[0]?.score ?? "—",
+        glitchTap: getLeaderboard("glitch-tap")[0]?.score ?? "—",
       }
     : null;
 
@@ -107,7 +109,7 @@ export default function Navbar() {
                   letterSpacing: "0.15em",
                 }}
               >
-                INSTINCT
+                REFLEX//ARC
               </span>
             </Link>
           </div>
@@ -190,6 +192,8 @@ export default function Navbar() {
                 { name: "Chromatic", val: stats.chromatic, color: "#ff2ec4" },
                 { name: "Tempo", val: stats.tempo, color: "#ffb000" },
                 { name: "Vector", val: stats.vector, color: "#b026ff" },
+                { name: "Stroop", val: stats.stroop, color: "#a6ff00" },
+                { name: "Glitch Tap", val: stats.glitchTap, color: "#00a8ff" },
               ].map((g) => (
                 <div
                   key={g.name}

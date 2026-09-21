@@ -38,6 +38,28 @@ const GAMES = [
     icon: "🚀",
     accent: "#b026ff",
   },
+  {
+    id: "stroop",
+    title: "Stroop",
+    description: "The word lies. Tap the ink color before the clock runs out.",
+    icon: "👁️",
+    accent: "#a6ff00",
+  },
+  {
+    id: "glitch-tap",
+    title: "Glitch Tap",
+    description: "Tap the glowing matrix cell before it fades. Speed accelerates.",
+    icon: "💠",
+    accent: "#00a8ff",
+  },
+  {
+    id: "classics",
+    title: "Classics",
+    description: "Snake, Minesweeper, Solitaire — coming soon",
+    icon: "👾",
+    accent: "rgba(255,255,255,0.4)",
+    comingSoon: true,
+  },
 ];
 
 export default function HubPage() {
@@ -50,7 +72,7 @@ export default function HubPage() {
 
   useEffect(() => {
     // Check if boot animation already played this session
-    const alreadyBooted = sessionStorage.getItem("instinct-booted");
+    const alreadyBooted = sessionStorage.getItem("reflex-arc-booted");
     if (alreadyBooted) {
       setBooted(true);
       setBootDone(true);
@@ -60,7 +82,7 @@ export default function HubPage() {
     // Respect prefers-reduced-motion
     const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReduced) {
-      sessionStorage.setItem("instinct-booted", "1");
+      sessionStorage.setItem("reflex-arc-booted", "1");
       setBooted(true);
       setBootDone(true);
       return;
@@ -69,7 +91,7 @@ export default function HubPage() {
     // Play boot animation
     setBooted(true);
     const timer = window.setTimeout(() => {
-      sessionStorage.setItem("instinct-booted", "1");
+      sessionStorage.setItem("reflex-arc-booted", "1");
       setBootDone(true);
     }, 800);
 
@@ -140,7 +162,7 @@ export default function HubPage() {
                 lineHeight: 1.4,
               }}
             >
-              INSTINCT
+              REFLEX//ARC
             </h1>
             <p
               style={{
@@ -150,7 +172,7 @@ export default function HubPage() {
                 letterSpacing: "0.05em",
               }}
             >
-              Test your senses. Trust your instincts.
+              React. Don't think.
             </p>
           </div>
         </section>

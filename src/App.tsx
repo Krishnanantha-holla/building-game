@@ -6,14 +6,18 @@ import ReflexGame from "./pages/games/reflex/ReflexGame";
 import ChromaticGame from "./pages/games/chromatic/ChromaticGame";
 import TempoGame from "./pages/games/tempo/TempoGame";
 import VectorGame from "./pages/games/vector/VectorGame";
+import StroopGame from "./pages/games/stroop/StroopGame";
+import GlitchTapGame from "./pages/games/glitch-tap/GlitchTapGame";
 import Navbar from "./components/Navbar";
 import { loadMutePreference } from "./lib/audio-engine";
 
 function GamesLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex-1 flex flex-col pt-16" style={{ fontFamily: "var(--font-body)" }}>
+    <div className="flex-1 flex flex-col pt-14 min-h-[100dvh] relative" style={{ fontFamily: "var(--font-body)" }}>
       <Navbar />
-      {children}
+      <div className="flex-1 flex flex-col relative w-full h-full">
+        {children}
+      </div>
     </div>
   );
 }
@@ -63,6 +67,22 @@ function App() {
         element={
           <GamesLayout>
             <VectorGame />
+          </GamesLayout>
+        }
+      />
+      <Route
+        path="/games/stroop"
+        element={
+          <GamesLayout>
+            <StroopGame />
+          </GamesLayout>
+        }
+      />
+      <Route
+        path="/games/glitch-tap"
+        element={
+          <GamesLayout>
+            <GlitchTapGame />
           </GamesLayout>
         }
       />
