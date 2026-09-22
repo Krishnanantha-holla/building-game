@@ -87,18 +87,25 @@ export function drawFluidSnake(
   if (skin === "Matrix") {
     ctx.strokeStyle = "#22c55e";
     ctx.lineWidth = cellSize * 0.7;
-    for (let i = 0; i < points.length - 1; i++) {
+    if (points.length === 1) {
       ctx.beginPath();
-      
-      const p1 = points[i];
-      const p2 = points[i+1];
-      const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
-      
-      if (dist < cellSize * 2) {
-        ctx.moveTo(p1.x, p1.y);
-        ctx.lineTo(p2.x, p2.y);
-        ctx.globalAlpha = 1 - (i / points.length);
-        ctx.stroke();
+      ctx.moveTo(points[0].x, points[0].y);
+      ctx.lineTo(points[0].x + 0.1, points[0].y);
+      ctx.stroke();
+    } else {
+      for (let i = 0; i < points.length - 1; i++) {
+        ctx.beginPath();
+        
+        const p1 = points[i];
+        const p2 = points[i+1];
+        const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+        
+        if (dist < cellSize * 2) {
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.globalAlpha = 1 - (i / points.length);
+          ctx.stroke();
+        }
       }
     }
     ctx.globalAlpha = 1.0;
@@ -108,15 +115,20 @@ export function drawFluidSnake(
     let lastP = points[0];
     ctx.moveTo(lastP.x, lastP.y);
     
-    for (let i = 1; i < points.length; i++) {
-      const p = points[i];
-      const dist = Math.hypot(p.x - lastP.x, p.y - lastP.y);
-      if (dist > cellSize * 2) {
-        ctx.moveTo(p.x, p.y);
-      } else {
-        ctx.lineTo(p.x, p.y);
+    if (points.length === 1) {
+      // If snake is only 1 block long, draw a tiny line so lineCap renders a dot
+      ctx.lineTo(lastP.x + 0.1, lastP.y);
+    } else {
+      for (let i = 1; i < points.length; i++) {
+        const p = points[i];
+        const dist = Math.hypot(p.x - lastP.x, p.y - lastP.y);
+        if (dist > cellSize * 2) {
+          ctx.moveTo(p.x, p.y);
+        } else {
+          ctx.lineTo(p.x, p.y);
+        }
+        lastP = p;
       }
-      lastP = p;
     }
     ctx.stroke();
   }
