@@ -9,6 +9,7 @@ interface GameTileProps {
   accent: string;
   comingSoon?: boolean;
   attractHighlight?: boolean;
+  href?: string;
 }
 
 export default function GameTile({
@@ -19,6 +20,7 @@ export default function GameTile({
   accent,
   comingSoon = false,
   attractHighlight = false,
+  href,
 }: GameTileProps) {
   const handleHover = () => {
     if (getAudioContext()) {
@@ -113,7 +115,7 @@ export default function GameTile({
 
   return (
     <Link
-      to={`/games/${id}`}
+      to={href || `/games/${id}`}
       className="block no-underline focus-visible:outline-none"
       style={{ ["--cabinet-accent" as string]: accent }}
     >

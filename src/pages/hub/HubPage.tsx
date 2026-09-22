@@ -55,10 +55,10 @@ const GAMES = [
   {
     id: "classics",
     title: "Classics",
-    description: "Snake, Minesweeper, Solitaire — coming soon",
+    description: "Snake, Minesweeper, Solitaire",
     icon: "👾",
-    accent: "rgba(255,255,255,0.4)",
-    comingSoon: true,
+    accent: "#9bbc0f",
+    href: "/classics",
   },
 ];
 

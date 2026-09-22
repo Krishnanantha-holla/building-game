@@ -8,15 +8,20 @@ import TempoGame from "./pages/games/tempo/TempoGame";
 import VectorGame from "./pages/games/vector/VectorGame";
 import StroopGame from "./pages/games/stroop/StroopGame";
 import GlitchTapGame from "./pages/games/glitch-tap/GlitchTapGame";
+import ClassicsHub from "./pages/classics/ClassicsHub";
+import SnakeGame from "./pages/classics/snake/SnakeGame";
 import Navbar from "./components/Navbar";
+import GameViewport from "./components/GameViewport";
 import { loadMutePreference } from "./lib/audio-engine";
 
-function GamesLayout({ children }: { children: React.ReactNode }) {
+function GamesLayout({ children, accent }: { children: React.ReactNode; accent?: string }) {
   return (
     <div className="flex-1 flex flex-col pt-14 min-h-[100dvh] relative" style={{ fontFamily: "var(--font-body)" }}>
       <Navbar />
       <div className="flex-1 flex flex-col relative w-full h-full">
-        {children}
+        <GameViewport accent={accent}>
+          {children}
+        </GameViewport>
       </div>
     </div>
   );
@@ -33,7 +38,7 @@ function App() {
       <Route
         path="/games/echo"
         element={
-          <GamesLayout>
+          <GamesLayout accent="#00e5ff">
             <EchoGame />
           </GamesLayout>
         }
@@ -41,7 +46,7 @@ function App() {
       <Route
         path="/games/reflex"
         element={
-          <GamesLayout>
+          <GamesLayout accent="#ff3b30">
             <ReflexGame />
           </GamesLayout>
         }
@@ -49,7 +54,7 @@ function App() {
       <Route
         path="/games/chromatic"
         element={
-          <GamesLayout>
+          <GamesLayout accent="#ff2ec4">
             <ChromaticGame />
           </GamesLayout>
         }
@@ -57,7 +62,7 @@ function App() {
       <Route
         path="/games/tempo"
         element={
-          <GamesLayout>
+          <GamesLayout accent="#ffb000">
             <TempoGame />
           </GamesLayout>
         }
@@ -65,7 +70,7 @@ function App() {
       <Route
         path="/games/vector"
         element={
-          <GamesLayout>
+          <GamesLayout accent="#b026ff">
             <VectorGame />
           </GamesLayout>
         }
@@ -73,7 +78,7 @@ function App() {
       <Route
         path="/games/stroop"
         element={
-          <GamesLayout>
+          <GamesLayout accent="#a6ff00">
             <StroopGame />
           </GamesLayout>
         }
@@ -81,8 +86,17 @@ function App() {
       <Route
         path="/games/glitch-tap"
         element={
-          <GamesLayout>
+          <GamesLayout accent="#00a8ff">
             <GlitchTapGame />
+          </GamesLayout>
+        }
+      />
+      <Route path="/classics" element={<ClassicsHub />} />
+      <Route
+        path="/classics/snake"
+        element={
+          <GamesLayout accent="#9bbc0f">
+            <SnakeGame />
           </GamesLayout>
         }
       />
