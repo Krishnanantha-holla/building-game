@@ -11,6 +11,7 @@ export function drawFluidSnake(
   ctx: CanvasRenderingContext2D,
   prevSnake: Point[],
   currSnake: Point[],
+  nextDirection: Point,
   progress: number,
   cellSize: number,
   skin: string,
@@ -21,39 +22,35 @@ export function drawFluidSnake(
 
   const points: { x: number; y: number }[] = [];
   
+  // 1. Extrapolated Head (Instant zero-latency response)
+  const currHead = currSnake[0];
+  const exHeadX = currHead.x + nextDirection.x * progress;
+  const exHeadY = currHead.y + nextDirection.y * progress;
+  points.push({ x: exHeadX * cellSize + cellSize / 2, y: exHeadY * cellSize + cellSize / 2 });
+
+  // 2. Fixed grid centers of the body
   for (let i = 0; i < currSnake.length; i++) {
-    const curr = currSnake[i];
-    const prev = i < prevSnake.length ? prevSnake[i] : prevSnake[prevSnake.length - 1];
+    points.push({ x: currSnake[i].x * cellSize + cellSize / 2, y: currSnake[i].y * cellSize + cellSize / 2 });
+  }
+
+  // 3. Shrunk Tail (unless growing)
+  const isGrowing = currSnake.length > prevSnake.length;
+  if (currSnake.length > 1) {
+    const currTail = currSnake[currSnake.length - 1];
+    let tx = currTail.x;
+    let ty = currTail.y;
     
-    let vx = curr.x;
-    let vy = curr.y;
-    
-    if (prev) {
-      const dx = curr.x - prev.x;
-      const dy = curr.y - prev.y;
-      
-      if (Math.abs(dx) <= 1 && Math.abs(dy) <= 1) {
-        vx = lerp(prev.x, curr.x, progress);
-        vy = lerp(prev.y, curr.y, progress);
-      } else {
-        if (dx > 1) { 
-          vx = lerp(prev.x, curr.x + boardWidth, progress) % boardWidth;
-        } else if (dx < -1) { 
-          vx = lerp(prev.x, curr.x - boardWidth, progress);
-          if (vx < 0) vx += boardWidth;
-        } else if (dy > 1) {
-          vy = lerp(prev.y, curr.y + boardHeight, progress) % boardHeight;
-        } else if (dy < -1) {
-          vy = lerp(prev.y, curr.y - boardHeight, progress);
-          if (vy < 0) vy += boardHeight;
-        }
+    if (!isGrowing) {
+      const targetTail = currSnake[currSnake.length - 2];
+      if (Math.abs(currTail.x - targetTail.x) <= 1 && Math.abs(currTail.y - targetTail.y) <= 1) {
+        tx = lerp(currTail.x, targetTail.x, progress);
+        ty = lerp(currTail.y, targetTail.y, progress);
       }
     }
-    
-    points.push({
-      x: vx * cellSize + cellSize / 2,
-      y: vy * cellSize + cellSize / 2
-    });
+    points[points.length - 1] = { x: tx * cellSize + cellSize / 2, y: ty * cellSize + cellSize / 2 };
+  } else {
+    // Length 1: The tail just follows the head interpolation
+    points[points.length - 1] = { x: exHeadX * cellSize + cellSize / 2, y: exHeadY * cellSize + cellSize / 2 };
   }
 
   ctx.lineCap = "round";
@@ -95,11 +92,9 @@ export function drawFluidSnake(
     } else {
       for (let i = 0; i < points.length - 1; i++) {
         ctx.beginPath();
-        
         const p1 = points[i];
         const p2 = points[i+1];
         const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
-        
         if (dist < cellSize * 2) {
           ctx.moveTo(p1.x, p1.y);
           ctx.lineTo(p2.x, p2.y);
@@ -111,12 +106,10 @@ export function drawFluidSnake(
     ctx.globalAlpha = 1.0;
   } else {
     ctx.beginPath();
-    
     let lastP = points[0];
     ctx.moveTo(lastP.x, lastP.y);
     
     if (points.length === 1) {
-      // If snake is only 1 block long, draw a tiny line so lineCap renders a dot
       ctx.lineTo(lastP.x + 0.1, lastP.y);
     } else {
       for (let i = 1; i < points.length; i++) {
@@ -133,26 +126,16 @@ export function drawFluidSnake(
     ctx.stroke();
   }
 
+  // Draw Eyes
   if (skin !== "Retro Pixel" && skin !== "Matrix") {
     ctx.shadowBlur = 0; 
     const head = points[0];
-    let dx = 0;
-    let dy = 0;
-    if (points.length > 1) {
-      dx = points[0].x - points[1].x;
-      dy = points[0].y - points[1].y;
-      
-      // If distance is too large (wrapping), fallback to previous dx/dy or default
-      const dist = Math.hypot(dx, dy);
-      if (dist > cellSize * 2 || dist < 0.001) {
-        dx = 1; dy = 0; 
-      } else {
-        dx /= dist;
-        dy /= dist;
-      }
-    } else {
-      dx = 1; dy = 0;
-    }
+    let dx = nextDirection.x;
+    let dy = nextDirection.y;
+    
+    const dist = Math.hypot(dx, dy);
+    if (dist < 0.001) { dx = 1; dy = 0; } 
+    else { dx /= dist; dy /= dist; }
     
     const nx = -dy;
     const ny = dx;

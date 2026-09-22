@@ -35,8 +35,8 @@ export default function SnakeGame() {
     return (localStorage.getItem("snake-skin") as Skin) || "Classic";
   });
   
-  const [snake, setSnake] = useState<Point[]>([{ x: 7, y: 7 }]);
-  const [prevSnake, setPrevSnake] = useState<Point[]>([{ x: 7, y: 7 }]);
+  const [snake, setSnake] = useState<Point[]>([{ x: 7, y: 7 }, { x: 6, y: 7 }, { x: 5, y: 7 }]);
+  const [prevSnake, setPrevSnake] = useState<Point[]>([{ x: 7, y: 7 }, { x: 6, y: 7 }, { x: 5, y: 7 }]);
   const [direction, setDirection] = useState<Point>({ x: 1, y: 0 });
   const [nextDirection, setNextDirection] = useState<Point>({ x: 1, y: 0 });
   
@@ -71,7 +71,13 @@ export default function SnakeGame() {
   }, [boardWidth, boardHeight]);
 
   const startGame = () => {
-    const initialSnake = [{ x: Math.floor(boardWidth/2), y: Math.floor(boardHeight/2) }];
+    const startX = Math.floor(boardWidth/2);
+    const startY = Math.floor(boardHeight/2);
+    const initialSnake = [
+      { x: startX, y: startY },
+      { x: startX - 1, y: startY },
+      { x: startX - 2, y: startY }
+    ];
     
     let newObstacles: Point[] = [];
     if (mode === "Obstacles") {
@@ -262,7 +268,7 @@ export default function SnakeGame() {
           }
 
           const progress = Math.min(1, (Date.now() - lastTickTimeRef.current) / SPEEDS[speedOption]);
-          drawFluidSnake(ctx, prevSnake, snake, progress, cellSize, skin, boardWidth, boardHeight);
+          drawFluidSnake(ctx, prevSnake, snake, nextDirection, progress, cellSize, skin, boardWidth, boardHeight);
 
           // Draw apples
           ctx.font = `${cellSize * 0.8}px sans-serif`;

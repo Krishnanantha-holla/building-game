@@ -30,7 +30,7 @@ export function SkinPreview({ skin }: { skin: Skin }) {
     const dummyApple = { x: 7, y: 1 };
     
     // Draw Snake
-    drawFluidSnake(ctx, dummySnake, dummySnake, 1, cellSize, skin, boardWidth, boardHeight);
+    drawFluidSnake(ctx, dummySnake, dummySnake, { x: 1, y: 0 }, 0, cellSize, skin, boardWidth, boardHeight);
     
     // Draw Apple (we can just draw an emoji or standard apple)
     ctx.font = `${cellSize * 0.8}px sans-serif`;
