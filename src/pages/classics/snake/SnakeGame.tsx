@@ -3,12 +3,14 @@ import { Link } from "react-router-dom";
 import GameIntro from "@/components/GameIntro";
 import { addToLeaderboard } from "@/lib/scoring";
 import type { LeaderboardEntry } from "@/lib/scoring";
+import { SkinPreview, getSnakeSegmentStyle, getAppleStyle, getBoardStyle } from "./SkinPreview";
 
 type GamePhase = "intro" | "setup" | "playing" | "gameover";
-type Mode = "Classic" | "Wrap" | "Time Attack";
-type Size = "Small" | "Medium" | "Large";
+type Mode = "Classic" | "Wrap" | "Time Attack" | "Obstacles" | "Zen";
+type Size = "Small" | "Medium" | "Large" | "Custom";
+type Skin = "Classic" | "Neon" | "Retro Pixel" | "Monochrome" | "Sunset" | "Matrix";
 
-const SIZES: Record<Size, number> = { Small: 15, Medium: 20, Large: 28 };
+const DEFAULT_SIZES: Record<Exclude<Size, "Custom">, number> = { Small: 15, Medium: 20, Large: 28 };
 const INITIAL_SPEED = 200;
 const MIN_SPEED = 80;
 const SPEED_DECREMENT = 5;
@@ -23,11 +25,19 @@ export default function SnakeGame() {
   const [phase, setPhase] = useState<GamePhase>("intro");
   const [mode, setMode] = useState<Mode>("Classic");
   const [size, setSize] = useState<Size>("Medium");
+  const [customWidth, setCustomWidth] = useState(20);
+  const [customHeight, setCustomHeight] = useState(20);
+  
+  const [skin, setSkin] = useState<Skin>(() => {
+    const saved = localStorage.getItem("snake-skin");
+    return (saved as Skin) || "Classic";
+  });
   
   const [snake, setSnake] = useState<Point[]>([{ x: 7, y: 7 }]);
   const [direction, setDirection] = useState<Point>({ x: 1, y: 0 });
   const [nextDirection, setNextDirection] = useState<Point>({ x: 1, y: 0 });
   const [apple, setApple] = useState<Point>({ x: 10, y: 7 });
+  const [obstacles, setObstacles] = useState<Point[]>([]);
   const [applesEaten, setApplesEaten] = useState(0);
   const [timeLeft, setTimeLeft] = useState(60);
   
@@ -37,36 +47,71 @@ export default function SnakeGame() {
   const gameLoopRef = useRef<number | null>(null);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
-  const boardSize = SIZES[size];
+  const boardWidth = size === "Custom" ? customWidth : DEFAULT_SIZES[size];
+  const boardHeight = size === "Custom" ? customHeight : DEFAULT_SIZES[size];
+  
+  useEffect(() => {
+    localStorage.setItem("snake-skin", skin);
+  }, [skin]);
 
   // Helper to spawn apple
-  const spawnApple = useCallback((currentSnake: Point[]) => {
+  const spawnApple = useCallback((currentSnake: Point[], currentObstacles: Point[]) => {
     let newApple: Point;
     while (true) {
       newApple = {
-        x: Math.floor(Math.random() * boardSize),
-        y: Math.floor(Math.random() * boardSize),
+        x: Math.floor(Math.random() * boardWidth),
+        y: Math.floor(Math.random() * boardHeight),
       };
-      if (!currentSnake.some(seg => seg.x === newApple.x && seg.y === newApple.y)) {
+      const hitSnake = currentSnake.some(seg => seg.x === newApple.x && seg.y === newApple.y);
+      const hitObstacle = currentObstacles.some(obs => obs.x === newApple.x && obs.y === newApple.y);
+      if (!hitSnake && !hitObstacle) {
         break;
       }
     }
     return newApple;
-  }, [boardSize]);
+  }, [boardWidth, boardHeight]);
 
   const startGame = () => {
-    const initialSnake = [{ x: Math.floor(boardSize/2), y: Math.floor(boardSize/2) }];
+    const initialSnake = [{ x: Math.floor(boardWidth/2), y: Math.floor(boardHeight/2) }];
+    
+    let newObstacles: Point[] = [];
+    if (mode === "Obstacles") {
+      const numObstacles = Math.floor((boardWidth * boardHeight) * 0.05);
+      for (let i = 0; i < numObstacles; i++) {
+        let obs: Point;
+        while (true) {
+          obs = {
+            x: Math.floor(Math.random() * boardWidth),
+            y: Math.floor(Math.random() * boardHeight),
+          };
+          const hitSnake = initialSnake.some(seg => seg.x === obs.x && seg.y === obs.y);
+          const alreadyExists = newObstacles.some(o => o.x === obs.x && o.y === obs.y);
+          if (!hitSnake && !alreadyExists) {
+            newObstacles.push(obs);
+            break;
+          }
+        }
+      }
+    }
+    
+    setObstacles(newObstacles);
     setSnake(initialSnake);
     setDirection({ x: 1, y: 0 });
     setNextDirection({ x: 1, y: 0 });
     setApplesEaten(0);
     setTimeLeft(60);
-    setApple(spawnApple(initialSnake));
+    setApple(spawnApple(initialSnake, newObstacles));
     setPhase("playing");
   };
 
   const endGame = useCallback(() => {
     setPhase("gameover");
+    
+    if (mode === "Zen") {
+      setRank(null);
+      setLeaderboard([]);
+      return;
+    }
     
     const finalScore = mode === "Time Attack" ? applesEaten : snake.length;
     const key = `snake-${mode.toLowerCase().replace(" ", "-")}-${size.toLowerCase()}`;
@@ -75,7 +120,7 @@ export default function SnakeGame() {
       name: "Player",
       score: finalScore,
       date: new Date().toISOString(),
-      rounds: applesEaten, // Reusing rounds to store apples eaten
+      rounds: applesEaten,
     });
     setRank(newRank);
     setLeaderboard(entries);
@@ -99,22 +144,28 @@ export default function SnakeGame() {
         let newX = head.x + currentDir.x;
         let newY = head.y + currentDir.y;
 
-        const isWrap = mode === "Wrap" || mode === "Time Attack";
+        const isWrap = mode === "Wrap" || mode === "Time Attack" || mode === "Zen";
 
         if (isWrap) {
-          if (newX < 0) newX = boardSize - 1;
-          if (newX >= boardSize) newX = 0;
-          if (newY < 0) newY = boardSize - 1;
-          if (newY >= boardSize) newY = 0;
+          if (newX < 0) newX = boardWidth - 1;
+          if (newX >= boardWidth) newX = 0;
+          if (newY < 0) newY = boardHeight - 1;
+          if (newY >= boardHeight) newY = 0;
         } else {
-          if (newX < 0 || newX >= boardSize || newY < 0 || newY >= boardSize) {
+          if (newX < 0 || newX >= boardWidth || newY < 0 || newY >= boardHeight) {
             endGame();
             return prev;
           }
         }
 
         // Self collision
-        if (prev.some(seg => seg.x === newX && seg.y === newY)) {
+        if (mode !== "Zen" && prev.some(seg => seg.x === newX && seg.y === newY)) {
+          endGame();
+          return prev;
+        }
+        
+        // Obstacle collision
+        if (obstacles.some(obs => obs.x === newX && obs.y === newY)) {
           endGame();
           return prev;
         }
@@ -124,7 +175,7 @@ export default function SnakeGame() {
 
         if (newX === apple.x && newY === apple.y) {
           setApplesEaten(a => a + 1);
-          setApple(spawnApple(newSnake));
+          setApple(spawnApple(newSnake, obstacles));
         } else {
           newSnake.pop();
         }
@@ -140,7 +191,7 @@ export default function SnakeGame() {
     return () => {
       if (gameLoopRef.current) clearTimeout(gameLoopRef.current);
     };
-  }, [phase, nextDirection, apple, mode, boardSize, applesEaten, spawnApple, endGame]);
+  }, [phase, nextDirection, apple, mode, boardWidth, boardHeight, applesEaten, spawnApple, endGame, obstacles]);
 
   // Timer for Time Attack
   useEffect(() => {
@@ -219,19 +270,19 @@ export default function SnakeGame() {
 
   if (phase === "setup") {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-6 text-text">
-        <h2 className="text-2xl font-bold mb-6 text-[#9bbc0f] uppercase tracking-widest" style={{ fontFamily: "var(--font-display)" }}>
+      <div className="flex-1 flex flex-col items-center justify-start p-6 text-text overflow-y-auto">
+        <h2 className="text-2xl font-bold mb-4 text-[#9bbc0f] uppercase tracking-widest mt-4" style={{ fontFamily: "var(--font-display)" }}>
           Setup
         </h2>
         
-        <div className="mb-6 w-full max-w-xs">
+        <div className="mb-4 w-full max-w-sm">
           <label className="block text-sm text-text-muted mb-2 font-bold">MODE</label>
-          <div className="flex flex-col gap-2">
-            {(["Classic", "Wrap", "Time Attack"] as Mode[]).map(m => (
+          <div className="flex flex-wrap gap-2">
+            {(["Classic", "Wrap", "Time Attack", "Obstacles", "Zen"] as Mode[]).map(m => (
               <button
                 key={m}
                 onClick={() => setMode(m)}
-                className={`py-2 px-4 rounded border transition-colors ${
+                className={`py-1.5 px-3 rounded border text-sm transition-colors ${
                   mode === m ? "border-[#9bbc0f] bg-[#9bbc0f]/20 text-[#9bbc0f]" : "border-border text-text-muted hover:border-text-dim"
                 }`}
               >
@@ -241,14 +292,14 @@ export default function SnakeGame() {
           </div>
         </div>
 
-        <div className="mb-8 w-full max-w-xs">
+        <div className="mb-4 w-full max-w-sm">
           <label className="block text-sm text-text-muted mb-2 font-bold">BOARD SIZE</label>
-          <div className="flex gap-2">
-            {(["Small", "Medium", "Large"] as Size[]).map(s => (
+          <div className="flex flex-wrap gap-2 mb-2">
+            {(["Small", "Medium", "Large", "Custom"] as Size[]).map(s => (
               <button
                 key={s}
                 onClick={() => setSize(s)}
-                className={`flex-1 py-2 rounded border transition-colors ${
+                className={`py-1.5 px-3 rounded border text-sm transition-colors flex-1 min-w-[70px] ${
                   size === s ? "border-[#9bbc0f] bg-[#9bbc0f]/20 text-[#9bbc0f]" : "border-border text-text-muted hover:border-text-dim"
                 }`}
               >
@@ -256,11 +307,58 @@ export default function SnakeGame() {
               </button>
             ))}
           </div>
+          {size === "Custom" && (
+            <div className="flex gap-4">
+              <label className="flex flex-col text-xs text-text-dim">
+                WIDTH (10-40)
+                <input 
+                  type="number" 
+                  min="10" max="40" 
+                  value={customWidth} 
+                  onChange={(e) => setCustomWidth(Math.max(10, Math.min(40, Number(e.target.value))))}
+                  className="bg-surface border border-border rounded p-1 text-text mt-1 w-20 text-center focus-visible:outline-none focus-visible:border-[#9bbc0f]"
+                />
+              </label>
+              <label className="flex flex-col text-xs text-text-dim">
+                HEIGHT (10-40)
+                <input 
+                  type="number" 
+                  min="10" max="40" 
+                  value={customHeight} 
+                  onChange={(e) => setCustomHeight(Math.max(10, Math.min(40, Number(e.target.value))))}
+                  className="bg-surface border border-border rounded p-1 text-text mt-1 w-20 text-center focus-visible:outline-none focus-visible:border-[#9bbc0f]"
+                />
+              </label>
+            </div>
+          )}
+        </div>
+
+        <div className="mb-6 w-full max-w-sm">
+          <label className="block text-sm text-text-muted mb-2 font-bold">SKIN</label>
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            {(["Classic", "Neon", "Retro Pixel", "Monochrome", "Sunset", "Matrix"] as Skin[]).map(s => (
+              <button
+                key={s}
+                onClick={() => setSkin(s)}
+                className={`py-1.5 px-2 rounded border text-xs transition-colors truncate ${
+                  skin === s ? "border-[#9bbc0f] bg-[#9bbc0f]/20 text-[#9bbc0f]" : "border-border text-text-muted hover:border-text-dim"
+                }`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+          
+          {/* Live Preview for Skin */}
+          <div className="text-xs text-text-dim mb-1">Preview:</div>
+          <div className="w-full h-16 bg-black border border-border rounded relative flex items-center justify-center overflow-hidden">
+            <SkinPreview skin={skin} />
+          </div>
         </div>
 
         <button
           onClick={startGame}
-          className="w-full max-w-xs py-3 rounded-xl bg-gradient-to-r from-[#9bbc0f] to-[#7a9609] text-black font-bold text-lg tracking-wide hover:scale-[1.02] active:scale-95 transition-all"
+          className="w-full max-w-sm py-3 rounded-xl bg-gradient-to-r from-[#9bbc0f] to-[#7a9609] text-black font-bold text-lg tracking-wide hover:scale-[1.02] active:scale-95 transition-all mt-auto mb-4"
         >
           START
         </button>
@@ -330,6 +428,16 @@ export default function SnakeGame() {
         <div className="text-sm">
           {mode === "Time Attack" ? `TIME: ${timeLeft}s` : `LEN: ${snake.length}`}
         </div>
+        
+        {mode === "Zen" && (
+          <button 
+            onClick={endGame}
+            className="px-3 py-1 bg-[#9bbc0f] text-black text-xs rounded hover:bg-white transition-colors"
+          >
+            END RUN
+          </button>
+        )}
+
         <div className="text-sm">
           APPLES: {applesEaten}
         </div>
@@ -337,33 +445,49 @@ export default function SnakeGame() {
 
       <div className="flex-1 flex items-center justify-center min-h-0 min-w-0">
         <div 
-          className="relative bg-black border-2 border-[#9bbc0f]/50 w-full max-w-[min(100%,_60vh)] aspect-square"
+          className="relative border-2 border-[#9bbc0f]/50 w-full max-w-[min(100%,_60vh)]"
           style={{ 
-            imageRendering: "pixelated" 
+            aspectRatio: `${boardWidth} / ${boardHeight}`,
+            ...getBoardStyle(skin)
           }}
         >
-          {/* Grid lines optional? Let's just draw snake and apple */}
-          {snake.map((segment, i) => (
+          {obstacles.map((obs, i) => (
             <div
-              key={i}
-              className="absolute bg-[#9bbc0f]"
+              key={`obs-${i}`}
+              className="absolute bg-white/40"
               style={{
-                left: `${(segment.x / boardSize) * 100}%`,
-                top: `${(segment.y / boardSize) * 100}%`,
-                width: `${100 / boardSize}%`,
-                height: `${100 / boardSize}%`,
-                border: "1px solid rgba(0,0,0,0.2)"
+                left: `${(obs.x / boardWidth) * 100}%`,
+                top: `${(obs.y / boardHeight) * 100}%`,
+                width: `${100 / boardWidth}%`,
+                height: `${100 / boardHeight}%`,
+                border: "1px solid rgba(0,0,0,0.5)"
               }}
             />
           ))}
+          {snake.map((segment, i) => (
+            <div
+              key={i}
+              className="absolute"
+              style={{
+                left: `${(segment.x / boardWidth) * 100}%`,
+                top: `${(segment.y / boardHeight) * 100}%`,
+                width: `${100 / boardWidth}%`,
+                height: `${100 / boardHeight}%`,
+                ...getSnakeSegmentStyle(skin, i, snake.length)
+              }}
+            >
+              {skin === "Matrix" && (i % 2 === 0 ? "1" : "0")}
+            </div>
+          ))}
           <div
-            className="absolute bg-red-500 rounded-full"
+            className="absolute"
             style={{
-              left: `${(apple.x / boardSize) * 100}%`,
-              top: `${(apple.y / boardSize) * 100}%`,
-              width: `${100 / boardSize}%`,
-              height: `${100 / boardSize}%`,
-              transform: "scale(0.7)"
+              left: `${(apple.x / boardWidth) * 100}%`,
+              top: `${(apple.y / boardHeight) * 100}%`,
+              width: `${100 / boardWidth}%`,
+              height: `${100 / boardHeight}%`,
+              transform: skin === "Classic" || skin === "Sunset" ? "scale(0.7)" : (skin === "Monochrome" ? "scale(0.6) rotate(45deg)" : "scale(0.8)"),
+              ...getAppleStyle(skin)
             }}
           />
         </div>
