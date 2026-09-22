@@ -406,7 +406,7 @@ export default function SnakeGame() {
           <button onClick={startGame} className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#9bbc0f] to-[#7a9609] text-black font-bold transition-all hover:scale-105 active:scale-95">
             Play Again
           </button>
-          <Link to="/classics" className="py-3 px-5 rounded-xl border border-border text-text-muted font-medium hover:bg-surface-hover hover:text-text transition-all active:scale-95">
+          <Link to="/" className="py-3 px-5 rounded-xl border border-border text-text-muted font-medium hover:bg-surface-hover hover:text-text transition-all active:scale-95">
             Hub
           </Link>
         </div>

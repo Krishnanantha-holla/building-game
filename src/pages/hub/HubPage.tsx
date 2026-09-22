@@ -53,12 +53,11 @@ const GAMES = [
     accent: "#00a8ff",
   },
   {
-    id: "classics",
-    title: "Classics",
-    description: "Snake, Minesweeper, Solitaire",
-    icon: "👾",
+    id: "snake",
+    title: "Snake",
+    description: "Eat apples, grow longer. Fluid arcade action.",
+    icon: "🐍",
     accent: "#9bbc0f",
-    href: "/classics",
   },
 ];
 

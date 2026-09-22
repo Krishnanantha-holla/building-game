@@ -8,8 +8,7 @@ import TempoGame from "./pages/games/tempo/TempoGame";
 import VectorGame from "./pages/games/vector/VectorGame";
 import StroopGame from "./pages/games/stroop/StroopGame";
 import GlitchTapGame from "./pages/games/glitch-tap/GlitchTapGame";
-import ClassicsHub from "./pages/classics/ClassicsHub";
-import SnakeGame from "./pages/classics/snake/SnakeGame";
+import SnakeGame from "./pages/games/snake/SnakeGame";
 import Navbar from "./components/Navbar";
 import GameViewport from "./components/GameViewport";
 import { loadMutePreference } from "./lib/audio-engine";
@@ -91,9 +90,8 @@ function App() {
           </GamesLayout>
         }
       />
-      <Route path="/classics" element={<ClassicsHub />} />
       <Route
-        path="/classics/snake"
+        path="/games/snake"
         element={
           <GamesLayout accent="#9bbc0f">
             <SnakeGame />
