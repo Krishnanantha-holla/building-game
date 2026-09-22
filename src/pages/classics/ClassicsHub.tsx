@@ -27,6 +27,22 @@ const CLASSIC_GAMES = [
     icon: "🃏",
     accent: "rgba(255,255,255,0.4)",
     comingSoon: true,
+  },
+  {
+    id: "pacman",
+    title: "Pac-Man",
+    description: "Eat dots, dodge ghosts. Waka waka.",
+    icon: "👻",
+    accent: "rgba(255,255,255,0.4)",
+    comingSoon: true,
+  },
+  {
+    id: "tetris",
+    title: "Tetris",
+    description: "Stack blocks, clear lines. Don't let them reach the top.",
+    icon: "🧱",
+    accent: "rgba(255,255,255,0.4)",
+    comingSoon: true,
   }
 ];
 

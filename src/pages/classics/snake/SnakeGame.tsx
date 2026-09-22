@@ -267,10 +267,7 @@ export default function SnakeGame() {
             ctx.strokeRect(obs.x * cellSize, obs.y * cellSize, cellSize, cellSize);
           }
 
-          const progress = Math.min(1, (Date.now() - lastTickTimeRef.current) / SPEEDS[speedOption]);
-          drawFluidSnake(ctx, prevSnake, snake, nextDirection, progress, cellSize, skin, boardWidth, boardHeight);
-
-          // Draw apples
+          // Draw apples FIRST, so the snake smoothly glides OVER them, hiding them naturally before the tick consumes them!
           ctx.font = `${cellSize * 0.8}px sans-serif`;
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
@@ -280,6 +277,9 @@ export default function SnakeGame() {
           for (const p of poisonApples) {
             ctx.fillText("💀", p.x * cellSize + cellSize/2, p.y * cellSize + cellSize/2);
           }
+
+          const progress = Math.min(1, (Date.now() - lastTickTimeRef.current) / SPEEDS[speedOption]);
+          drawFluidSnake(ctx, prevSnake, snake, direction, progress, cellSize, skin, boardWidth, boardHeight);
         }
       }
       requestRef.current = requestAnimationFrame(animate);
